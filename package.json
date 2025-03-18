@@ -4,6 +4,7 @@
   "description": "api for calendapp",
   "main": "index.js",
   "scripts": {
+    "build": "npm install", 
     "start": "node api/index",
     "dev": "nodemon api/index",
     "migrate": "node ./config/auto-db-migration.js",

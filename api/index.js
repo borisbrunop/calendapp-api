@@ -64,5 +64,5 @@ app.use("/api/v1/notifications", notifications);
 const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
-  console.log(`listening on http://localhost:${PORT}`);
+  console.log(`listening on http://localhost:${process.env.PORT}`);
 });
