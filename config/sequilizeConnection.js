@@ -10,6 +10,7 @@ const sequelize = new Sequelize(
     dialect: "mysql" /* one of 'mysql' | 'mariadb' | 'postgres' | 'mssql' */,
     timezone: "-06:00",
     logging: false,
+    dialectModule: require('mysql2'),
   }
 );
 
