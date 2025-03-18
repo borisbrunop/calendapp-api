@@ -1,0 +1,249 @@
+const { Op } = require("sequelize");
+const sequelize = require("../config/sequilizeConnection");
+var initModels = require("../models/init-models");
+const paramsValidate = require("../utils/validateParams");
+const { format } = require("date-fns");
+const setDateTimes = require("../utils/setDateTimes");
+var models = initModels(sequelize);
+
+const week_days = {
+  mon: [],
+  tues: [],
+  wed: [],
+  thu: [],
+  fri: [],
+  sat: [],
+  sun: [],
+};
+
+const check_week_days = ["mon", "tues", "wed", "thu", "fri", "sat", "sun"];
+
+async function get_quote_time(req, res) {
+  try {
+    // req.user.dataValues
+
+    //Valid Params
+    const validParams = ["id"];
+    const params = paramsValidate(validParams, req.query);
+
+    if (!params) {
+      res.status(200).json({ message: "Bad request", error: true });
+      return;
+    }
+
+    const times = await models.quote_time.findAll({
+      where: {
+        quote_type_id: params.id,
+        status: 1,
+      },
+    });
+
+    const response = {
+      mon: [],
+      tues: [],
+      wed: [],
+      thu: [],
+      fri: [],
+      sat: [],
+      sun: [],
+    };
+
+    for (let t of times) {
+      const v = t.dataValues;
+      response[v.week_day].push(v);
+    }
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.log("quote typer::Error ", error);
+    res.status(500).json({ error });
+  }
+}
+
+async function get_time_to_add_quote_concurrent(req, res) {
+  try {
+    // req.user.dataValues
+
+    //Valid Params
+    const validParams = ["id"];
+    const params = paramsValidate(validParams, req.query);
+
+    if (!params) {
+      res.status(200).json({ message: "Bad request", error: true });
+      return;
+    }
+
+    const times = await models.quote_time.findAll({
+      where: {
+        quote_type_id: params.id,
+        status: 1,
+      },
+    });
+
+    res.status(200).json(times);
+  } catch (error) {
+    console.log("quote typer::Error ", error);
+    res.status(500).json({ error });
+  }
+}
+
+async function get_time_to_add_quote(req, res) {
+  try {
+    // req.user.dataValues
+
+    //Valid Params
+    const validParams = ["id", "day"];
+    const params = paramsValidate(validParams, req.query);
+
+    if (!params) {
+      res.status(200).json({ message: "Bad request", error: true });
+      return;
+    }
+
+    const quotes = await models.quote.findAll({
+      where: {
+        to: { [Op.gt]: new Date() },
+        provider_id: req.user.dataValues.id,
+      },
+    });
+
+    const week_day = format(params.day, "E").toLowerCase();
+
+    const times = await models.quote_time.findAll({
+      where: {
+        quote_type_id: params.id,
+        status: 1,
+        week_day,
+      },
+    });
+
+    const disabledTimes = [];
+
+    for (let qu of quotes) {
+      const q = qu.dataValues;
+      if (format(q.from, "yyyy-MM-dd") === format(params.day, "yyyy-MM-dd")) {
+        const quoteFormat = {
+          from: format(q.from, "kk:mm:ss"),
+          to: format(q.to, "kk:mm:ss"),
+        };
+        const findTime = times.find(
+          (t) =>
+            t.dataValues.from === quoteFormat.from &&
+            t.dataValues.to === quoteFormat.to
+        );
+        if (findTime) disabledTimes.push(findTime.dataValues.id);
+      }
+    }
+
+    res.status(200).json(
+      times.map((t) => ({
+        ...t.dataValues,
+        disabled: disabledTimes.includes(t.id),
+      }))
+    );
+  } catch (error) {
+    console.log("quote typer::Error ", error);
+    res.status(500).json({ error });
+  }
+}
+
+async function create_quote_time(req, res) {
+  try {
+    // req.user.dataValues
+
+    //Valid Params
+    const validParams = ["week_day", "quote_type_id", "from", "to"];
+    const params = paramsValidate(validParams, req.body);
+
+    if (!params) {
+      res.status(200).json({ message: "Bad request", error: true });
+      return;
+    }
+
+    const body = {
+      to: params.to,
+      from: params.from,
+      quote_type_id: params.quote_type_id,
+      week_day: params.week_day,
+    };
+
+    const newTime = await models.quote_time.create(body);
+
+    res.status(200).json(newTime);
+  } catch (error) {
+    console.log("quote typer::Error ", error);
+    res.status(500).json({ error });
+  }
+}
+
+async function update_quote_time(req, res) {
+  try {
+    // req.user.dataValues
+
+    //Valid Params
+    const validParams = ["id", "from", "to"];
+    const params = paramsValidate(validParams, req.body);
+
+    if (!params) {
+      res.status(200).json({ message: "Bad request", error: true });
+      return;
+    }
+
+    const newTime = await models.quote_time.update(
+      {
+        from: params.from,
+        to: params.to,
+      },
+      {
+        where: {
+          id: params.id,
+        },
+      }
+    );
+
+    res.status(200).json(newTime);
+  } catch (error) {
+    console.log("quote typer::Error ", error);
+    res.status(500).json({ error });
+  }
+}
+
+async function delete_quote_time(req, res) {
+  try {
+    // req.user.dataValues
+
+    //Valid Params
+    const validParams = ["id"];
+    const params = paramsValidate(validParams, req.body);
+
+    if (!params) {
+      res.status(200).json({ message: "Bad request", error: true });
+      return;
+    }
+
+    const newTime = await models.quote_time.update(
+      {
+        status: 0,
+      },
+      {
+        where: {
+          id: params.id,
+        },
+      }
+    );
+
+    res.status(200).json(newTime);
+  } catch (error) {
+    console.log("quote typer::Error ", error);
+    res.status(500).json({ error });
+  }
+}
+
+module.exports = {
+  get_quote_time,
+  create_quote_time,
+  update_quote_time,
+  delete_quote_time,
+  get_time_to_add_quote,
+  get_time_to_add_quote_concurrent,
+};

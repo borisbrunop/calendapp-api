@@ -1,0 +1,35 @@
+{
+  "name": "calendapi",
+  "version": "1.0.0",
+  "description": "api for calendapp",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index",
+    "dev": "nodemon index",
+    "migrate": "node ./config/auto-db-migration.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "boris",
+  "license": "ISC",
+  "dependencies": {
+    "@bull-board/api": "^6.7.10",
+    "@bull-board/express": "^6.7.10",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "bull": "^4.16.5",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.4.5",
+    "expo-server-sdk": "^3.14.0",
+    "express": "^4.21.1",
+    "express-basic-auth": "^1.2.1",
+    "http-errors": "^2.0.0",
+    "ioredis": "^5.6.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.11.3",
+    "nodemon": "^3.1.9",
+    "sequelize": "^6.37.4",
+    "sequelize-auto": "^0.8.8"
+  }
+}
