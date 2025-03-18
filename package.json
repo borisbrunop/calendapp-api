@@ -4,8 +4,8 @@
   "description": "api for calendapp",
   "main": "index.js",
   "scripts": {
-    "start": "node index",
-    "dev": "nodemon index",
+    "start": "node api/index",
+    "dev": "nodemon api/index",
     "migrate": "node ./config/auto-db-migration.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

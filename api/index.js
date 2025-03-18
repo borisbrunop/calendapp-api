@@ -3,7 +3,7 @@ const dotEnv = require("dotenv").config();
 var bodyParser = require("body-parser");
 const cors = require("cors");
 const morgan = require("morgan");
-const { runNotificationQueue, notificationQueue } = require("./utils/BullIoRedis");
+const { runNotificationQueue, notificationQueue } = require("../utils/BullIoRedis");
 const { BullAdapter } = require('@bull-board/api/bullAdapter');
 const { ExpressAdapter } = require('@bull-board/express');
 const { createBullBoard } = require("@bull-board/api");
@@ -39,15 +39,15 @@ createBullBoard({
   serverAdapter: serverAdapter,
 });
 
-const users = require("./routes/users.route");
-const user = require("./routes/user.route");
-const quote_type = require("./routes/quote_type.route");
-const quote_time = require("./routes/quote_times.route");
-const quote = require("./routes/quote.route");
-const patients = require("./routes/patients.route");
-const categories = require("./routes/categories.route");
-const providers = require("./routes/providers.route");
-const notifications = require("./routes/notifications.route");
+const users = require("../routes/users.route");
+const user = require("../routes/user.route");
+const quote_type = require("../routes/quote_type.route");
+const quote_time = require("../routes/quote_times.route");
+const quote = require("../routes/quote.route");
+const patients = require("../routes/patients.route");
+const categories = require("../routes/categories.route");
+const providers = require("../routes/providers.route");
+const notifications = require("../routes/notifications.route");
 
 app.use('/admin/queues', authMiddleware, serverAdapter.getRouter());
 app.use("/api/v1/users", users);
