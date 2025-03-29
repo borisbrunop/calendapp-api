@@ -1,14 +1,15 @@
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const sequelize = require("../config/sequilizeConnection");
 var initModels = require("../models/init-models");
 const paramsValidate = require("../utils/validateParams");
-const { format, addWeeks, subWeeks } = require("date-fns");
+const { format, addWeeks, subWeeks, setHours, setMinutes, parse } = require("date-fns");
 var models = initModels(sequelize);
 const bcrypt = require("bcrypt");
 const findWeekDay = require("../utils/findWeekday");
 const setDateTimes = require("../utils/setDateTimes");
 const notifications = require("../utils/notifications");
 const { QUOTES_STATUS } = require("../const/Quotes");
+const { formatInTimeZone } = require("date-fns-tz");
 const saltRounds = 10;
 
 async function create(req, res) {
@@ -146,18 +147,26 @@ async function create(req, res) {
     const quote_time = find_quote.dataValues;
     const quote_type = find_quote.dataValues.quote_type.dataValues;
 
-    const from = new Date(params.day);
-    const to = new Date(params.day);
-    from.setHours(
-      Number(quote_time.from.split(":")[0]),
-      Number(quote_time.from.split(":")[1]),
-      0
-    );
-    to.setHours(
-      Number(quote_time.to.split(":")[0]),
-      Number(quote_time.to.split(":")[1]),
-      0
-    );
+    const [fromHoursStr, fromMinutesStr] = quote_time.from.split(":")
+    const [toHoursStr, toMinutesStr] = quote_time.to.split(":")
+    const [monthStr, dayStr, yearStr] = params.day.split("-")
+
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10); // Month from input string (1-12)
+    const day = parseInt(dayStr, 10);
+    const fromHours = parseInt(fromHoursStr, 10);
+    const fromMinutes = parseInt(fromMinutesStr, 10);
+    const toHours = parseInt(toHoursStr, 10);
+    const toMinutes = parseInt(toMinutesStr, 10);
+
+    // 3. Use Date.UTC() - NOTE: Month is 0-indexed here!
+    const FromUtcTimestamp = Date.UTC(year, month - 1, day, fromHours, fromMinutes);
+    const toUtcTimestamp = Date.UTC(year, month - 1, day, toHours, toMinutes);
+
+    // 4. Create the Date object from the UTC timestamp
+    const from = new Date(FromUtcTimestamp);
+    const to = new Date(toUtcTimestamp);
+  
 
     // PATIENT CREATE QUOTE
     let body = {};
@@ -190,7 +199,7 @@ async function create(req, res) {
         provider_id: quote_type.provider_id,
         from,
         to,
-        note: params.note || "",
+        notes: params.notes || "",
         quote_type_id: quote_time?.quote_type_id,
         status_id: 2,
         answers: params.answers,
@@ -232,12 +241,12 @@ async function create(req, res) {
         provider_id: req.user.dataValues.id,
         from,
         to,
-        note: params.note || "",
+        notes: params.notes || "",
         quote_type_id: quote_time?.quote_type_id,
         status_id: 1,
       };
     }
-    
+
     const checkQuote = await models.quote.findOne({
       where: {
         from: body.from,
@@ -299,6 +308,13 @@ async function create(req, res) {
 
 async function get_quotes_calendar(req, res) {
   try {
+    const validParams = ["tz"];
+    const params = paramsValidate(validParams, req.query);
+
+    if (!params) {
+      res.status(200).json({ message: "Bad request", error: true });
+      return;
+    }
     let where = {
       to: { [Op.gt]: subWeeks(new Date(), 4) },
       status_id: { [Op.ne]: 4 },
@@ -311,6 +327,25 @@ async function get_quotes_calendar(req, res) {
       where.provider_id = req.user.dataValues.id;
     }
     const quotes = await models.quote.findAll({
+      attributes: [
+        "id",
+        "provider_id",
+        "patient_id",
+        "notes",
+        "status_id",
+        "quote_type_id",
+        "answers",
+        [
+            Sequelize.fn('CONVERT_TZ', Sequelize.col('from'), '+00:00', params.tz) // The datetime value to format
+            ,
+          'from' // Alias for the formatted result
+        ],
+        [
+          // Wrap CONVERT_TZ inside DATE_FORMAT
+            Sequelize.fn('CONVERT_TZ', Sequelize.col('to'), '+00:00', params.tz),
+          'to' // Alias for the formatted result
+        ]
+      ],
       include: [
         {
           model: models.quote_type,
@@ -335,12 +370,14 @@ async function get_quotes_calendar(req, res) {
 
     const response = {};
 
+    const timeZone = 'UTC';
+
     for (let q of quotes) {
-      const day = format(q.from, "yyyy-MM-dd");
+      const day = formatInTimeZone(q.from, timeZone, "yyyy-MM-dd");
       const v = {
         ...q.dataValues,
         name: q.quote_type.dataValues.name,
-        time: `${format(q.from, "k:mm")} - ${format(q.to, "k:mm")}`,
+        time: `${formatInTimeZone(q.from, timeZone, "k:mm")} - ${formatInTimeZone(q.to, timeZone, "k:mm")}`,
       };
       if (response[day]) {
         response[day].push(v);
@@ -352,7 +389,7 @@ async function get_quotes_calendar(req, res) {
 
     res.status(200).json(response);
   } catch (error) {
-    console.log("create user::Error ", error);
+    console.log("get quotes calendar::Error ", error);
     res.status(500).json({ error });
   }
 }
@@ -437,6 +474,13 @@ async function delete_quote(req, res) {
 
 async function get_quotes(req, res) {
   try {
+    const validParams = ["tz"];
+    const params = paramsValidate(validParams, req.query);
+  
+    if (!params) {
+      res.status(200).json({ message: "Bad request", error: true });
+      return;
+    }
     let where = {
       to: { [Op.lt]: new Date() },
       status_id: { [Op.ne]: 4 },
@@ -454,6 +498,25 @@ async function get_quotes(req, res) {
     }
 
     const quotes = await models.quote.findAll({
+      attributes: [
+        "id",
+        "provider_id",
+        "patient_id",
+        "notes",
+        "status_id",
+        "quote_type_id",
+        "answers",
+        [
+            Sequelize.fn('CONVERT_TZ', Sequelize.col('from'), '+00:00', params.tz) // The datetime value to format
+            ,
+          'from' // Alias for the formatted result
+        ],
+        [
+          // Wrap CONVERT_TZ inside DATE_FORMAT
+            Sequelize.fn('CONVERT_TZ', Sequelize.col('to'), '+00:00', params.tz),
+          'to' // Alias for the formatted result
+        ]
+      ],
       include: [
         {
           model: models.quote_type,
@@ -472,7 +535,7 @@ async function get_quotes(req, res) {
           as: "provider",
         },
       ],
-      order: [["from", "ASC"]],
+      order: [["from", "DESC"]],
       where,
     });
     if (!quotes) {

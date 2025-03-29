@@ -21,6 +21,7 @@ async function save_token(req, res) {
     const find_token = await models.push_token.findOne({where: {token}})
 
     if(!find_user_token && !find_token){
+        await models.push_token.destroy({where: {user_id: req.user.id, device_id: device}})
         await models.push_token.create({
             user_id: req.user.id,
             token,
@@ -37,6 +38,7 @@ async function save_token(req, res) {
 
     if((!!find_user_token && find_user_token.token !== token) || (!!find_token && !find_user_token)){
         await models.push_token.destroy({where: {token}})
+        await models.push_token.destroy({where: {user_id: req.user.id, device_id: device}})
         await models.push_token.create({
             user_id: req.user.id,
             token,
@@ -48,7 +50,7 @@ async function save_token(req, res) {
 
     res.status(200).json({message: "DONE"});
   } catch (error) {
-    console.log("create user::Error ", error);
+    console.log("create token::Error ", error);
     res.status(500).json({ error });
   }
 }

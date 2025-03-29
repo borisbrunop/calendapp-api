@@ -117,26 +117,33 @@ const ave_roles = ['pro', 'pat']
 
 async function get_users(req, res) {
   try {
-    const { search, role } = req.query;
+    const { search, role, categories } = req.query;
     let users = [];
 
     if(!role || !ave_roles.includes(role)){
         res.status(200).json({ message: "Bad request, missing role", error: true });
         return;
     }
+    let includeCategory = {
+      model: models.user_category,
+      as: 'user_categories',
+      include: [{
+        model: models.category,
+        attibutes: ["name"],
+        as: "category"
+      }]
+    }
+
+    if(categories){
+      includeCategory.where = {
+        category_id: categories.split(",").map((k) => Number(k))
+      }
+    }
 
     if (!search) {
       users = await models.user.findAll({
         attibutes: ["id", "name"],
-        include: [{
-          model: models.user_category,
-          as: 'user_categories',
-          include: [{
-            model: models.category,
-            attibutes: ["name"],
-            as: "category"
-          }]
-        }],
+        include: [includeCategory],
         where:{
           find_by: role,
         },
@@ -146,15 +153,7 @@ async function get_users(req, res) {
     if (!!search) {
       users = await models.user.findAll({
         attibutes: ["id", "name", "email", "summary"],
-        include: [{
-          model: models.user_category,
-          as: 'user_categories',
-          include: [{
-            model: models.category,
-            attibutes: ["name"],
-            as: "category"
-          }]
-        }],
+        include: [includeCategory],
         where: {
           find_by: role,
           [Op.or]: {

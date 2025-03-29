@@ -7,10 +7,13 @@ const sequelize = new Sequelize(
   process.env.DATABASE_PASS,
   {
     host: process.env.DATABASE_HOST,
-    dialect: "mysql" /* one of 'mysql' | 'mariadb' | 'postgres' | 'mssql' */,
-    timezone: "-06:00",
+    dialect: "mysql",
+    timezone: "UTC",
     logging: false,
     dialectModule: require('mysql2'),
+    dialectOptions: {
+      timezone: "+00:00",
+    },
   }
 );
 

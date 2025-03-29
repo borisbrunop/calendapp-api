@@ -1,4 +1,4 @@
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const sequelize = require("../config/sequilizeConnection");
 var initModels = require("../models/init-models");
 const paramsValidate = require("../utils/validateParams");
@@ -23,7 +23,7 @@ async function get_quote_time(req, res) {
     // req.user.dataValues
 
     //Valid Params
-    const validParams = ["id"];
+    const validParams = ["id", "tz"];
     const params = paramsValidate(validParams, req.query);
 
     if (!params) {
@@ -32,10 +32,36 @@ async function get_quote_time(req, res) {
     }
 
     const times = await models.quote_time.findAll({
+      attributes: [
+        "id",
+        "quote_type_id",
+        "status",
+        "week_day",
+        [
+          Sequelize.fn(
+            'DATE_FORMAT', // MySQL function to format dates/times
+            Sequelize.fn('CONVERT_TZ', Sequelize.col('from'), '+00:00', params.tz), // The datetime value to format
+            '%H:%i' // The format string: %H = Hour (00-23), %i = Minute (00-59)
+          ),
+          'from' // Alias for the formatted result
+        ],
+        [
+          // Wrap CONVERT_TZ inside DATE_FORMAT
+          Sequelize.fn(
+            'DATE_FORMAT',
+            Sequelize.fn('CONVERT_TZ', Sequelize.col('to'), '+00:00', params.tz),
+            '%H:%i'
+          ),
+          'to' // Alias for the formatted result
+        ]
+      ],
       where: {
         quote_type_id: params.id,
         status: 1,
       },
+      order: [
+        ["from", "ASC"]
+      ]
     });
 
     const response = {
@@ -65,7 +91,7 @@ async function get_time_to_add_quote_concurrent(req, res) {
     // req.user.dataValues
 
     //Valid Params
-    const validParams = ["id"];
+    const validParams = ["id", "tz"];
     const params = paramsValidate(validParams, req.query);
 
     if (!params) {
@@ -74,10 +100,36 @@ async function get_time_to_add_quote_concurrent(req, res) {
     }
 
     const times = await models.quote_time.findAll({
+      attributes: [
+        "id",
+        "quote_type_id",
+        "status",
+        "week_day",
+        [
+          Sequelize.fn(
+            'DATE_FORMAT', // MySQL function to format dates/times
+            Sequelize.fn('CONVERT_TZ', Sequelize.col('from'), '+00:00', params.tz), // The datetime value to format
+            '%H:%i' // The format string: %H = Hour (00-23), %i = Minute (00-59)
+          ),
+          'from' // Alias for the formatted result
+        ],
+        [
+          // Wrap CONVERT_TZ inside DATE_FORMAT
+          Sequelize.fn(
+            'DATE_FORMAT',
+            Sequelize.fn('CONVERT_TZ', Sequelize.col('to'), '+00:00', params.tz),
+            '%H:%i'
+          ),
+          'to' // Alias for the formatted result
+        ]
+      ],
       where: {
         quote_type_id: params.id,
         status: 1,
       },
+      order: [
+        ["from", "ASC"]
+      ]
     });
 
     res.status(200).json(times);
@@ -92,7 +144,7 @@ async function get_time_to_add_quote(req, res) {
     // req.user.dataValues
 
     //Valid Params
-    const validParams = ["id", "day"];
+    const validParams = ["id", "day", "tz"];
     const params = paramsValidate(validParams, req.query);
 
     if (!params) {
@@ -110,11 +162,37 @@ async function get_time_to_add_quote(req, res) {
     const week_day = format(params.day, "E").toLowerCase();
 
     const times = await models.quote_time.findAll({
+      attributes: [
+        "id",
+        "quote_type_id",
+        "status",
+        "week_day",
+        [
+          Sequelize.fn(
+            'DATE_FORMAT', // MySQL function to format dates/times
+            Sequelize.fn('CONVERT_TZ', Sequelize.col('from'), '+00:00', params.tz), // The datetime value to format
+            '%H:%i' // The format string: %H = Hour (00-23), %i = Minute (00-59)
+          ),
+          'from' // Alias for the formatted result
+        ],
+        [
+          // Wrap CONVERT_TZ inside DATE_FORMAT
+          Sequelize.fn(
+            'DATE_FORMAT',
+            Sequelize.fn('CONVERT_TZ', Sequelize.col('to'), '+00:00', params.tz),
+            '%H:%i'
+          ),
+          'to' // Alias for the formatted result
+        ]
+      ],
       where: {
         quote_type_id: params.id,
         status: 1,
         week_day,
       },
+      order: [
+        ["from", "ASC"]
+      ]
     });
 
     const disabledTimes = [];
