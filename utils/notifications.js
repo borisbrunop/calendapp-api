@@ -30,6 +30,10 @@ async function sendNotification(notis) {
                     body: n.params ? changeText(n.notification, n.params) : noti_data.description, 
                 }
                 if(n.time) obj_to_push.scheduledAt = n.time.getTime()
+                await models.notification.create({
+                    user_id: n.user,
+                    name: NOTIFICATIONS_DATA[n.notification].name,
+                })
                 notis_formated.push(obj_to_push)
             }
         }
@@ -73,7 +77,9 @@ async function send_schedule_starting(notis) {
                           {
                             pushToken: u.dataValues.token,
                             message: changeText(n.notification, [nc.name]),
-                            title: noti_data.title
+                            title: noti_data.title,
+                            name: noti_data.name,
+                            user: n.user
                           },
                           { delay }
                         );
@@ -97,7 +103,9 @@ async function send_schedule_boolean(notis) {
                         {
                         pushToken: u.dataValues.token,
                         message: noti_data.description,
-                        title: noti_data.title
+                        title: noti_data.title,
+                        name: noti_data.name,
+                        user: n.user
                         },
                         { delay }
                     );
@@ -140,32 +148,52 @@ const NOTIFICATIONS_DATA = {
     1: {
         title: "New Quote 🥂",
         description: "check your calendar to confirm this new quote",
+        descriptionClient: "check your calendar to confirm this new quote",
+        redirect: "/calendar",
+        name: "QUOTE_CREATED"
     },
     2: {
         title: "New Concurrent Quotes 🎉",
         description: "check your calendar to make sure this action is OK !",
+        descriptionClient: "check your calendar to make sure this action is OK !",
+        redirect: "/calendar",
+        name: "CONCURRENT_QUOTE_CREATED"
     },
     3: {
         title: "Hurry up you have a Quote 🏃🏻‍♂️",
         description: "your quote start in %1%",
+        descriptionClient: "your quote start in soon",
+        redirect: "/calendar",
+        name: "QUOTES_STARTING"
     },
     4: {
         title: "Quote Finished 👍🏼",
         description: "till the next quote",
+        descriptionClient: "till the next quote",
+        redirect: "/calendar",
+        name: "QUOTES_FINISH"
     },
     5: {
         title: "Quote cancelled 😭",
         description: "your %1% cancelled your quote",
+        descriptionClient: "Cancelled your quote",
+        redirect: "/calendar",
+        name: "CANCEL_QUOTE"
     },
     6: {
         title: "Quote confirmed 😎",
         description: "now just wait to the day !",
+        descriptionClient: "now just wait to the day !",
+        redirect: "/calendar",
+        name: "CONFIRM_QUOTE"
     },
 }
 
 module.exports = {
     sendNotification,
     NOTIFICATIONS,
+    NOTIFICATIONS_DATA,
     send_schedule_starting,
-    send_schedule_boolean
+    send_schedule_boolean,
+    changeText
 };

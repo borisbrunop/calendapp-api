@@ -3,6 +3,7 @@ var _category = require("./category");
 var _config_noti = require("./config_noti");
 var _device = require("./device");
 var _noti_type = require("./noti_type");
+var _notification = require("./notification");
 var _provider_patient = require("./provider_patient");
 var _push_token = require("./push_token");
 var _quote_status = require("./quote_status");
@@ -18,6 +19,7 @@ function initModels(sequelize) {
   var config_noti = _config_noti(sequelize, DataTypes);
   var device = _device(sequelize, DataTypes);
   var noti_type = _noti_type(sequelize, DataTypes);
+  var notification = _notification(sequelize, DataTypes);
   var provider_patient = _provider_patient(sequelize, DataTypes);
   var push_token = _push_token(sequelize, DataTypes);
   var quote_status = _quote_status(sequelize, DataTypes);
@@ -42,6 +44,8 @@ function initModels(sequelize) {
   quote_type.hasMany(quote_time, { as: "quote_times", foreignKey: "quote_type_id"});
   quote.belongsTo(quote_type, { as: "quote_type", foreignKey: "quote_type_id"});
   quote_type.hasMany(quote, { as: "quotes", foreignKey: "quote_type_id"});
+  notification.belongsTo(user, { as: "user", foreignKey: "user_id"});
+  user.hasMany(notification, { as: "notifications", foreignKey: "user_id"});
   provider_patient.belongsTo(user, { as: "patient", foreignKey: "patient_id"});
   user.hasMany(provider_patient, { as: "provider_patients", foreignKey: "patient_id"});
   provider_patient.belongsTo(user, { as: "provider", foreignKey: "provider_id"});
@@ -64,6 +68,7 @@ function initModels(sequelize) {
     config_noti,
     device,
     noti_type,
+    notification,
     provider_patient,
     push_token,
     quote_status,

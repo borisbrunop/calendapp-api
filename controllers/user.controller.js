@@ -75,7 +75,6 @@ async function edit_user(req, res) {
 
     req.user.name = params.name;
     req.user.summary = params.summary || "";
-    req.user.find_by = params.find_by;
     if (params.pass) {
       req.user.pass = params.pass;
     }

@@ -12,6 +12,14 @@ router
   .get(validateMiddleware.validateUser, NotificationsController.get_notis);
 
 router
+  .route("/my")
+  .get(validateMiddleware.validateUser, NotificationsController.get_my_notis);
+
+router
+  .route("/see")
+  .put(validateMiddleware.validateUser, NotificationsController.see_my_notis);
+
+router
   .route("/")
   .put(validateMiddleware.validateUser, NotificationsController.change_notis);
 

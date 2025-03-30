@@ -35,4 +35,41 @@ async function check(req, res) {
   }
 }
 
-module.exports = { check };
+async function get_providers(req, res) {
+  try {
+    const { search } = req.query;
+    let providers = [];
+
+    if (!search) {
+      providers = await models.user.findAll({
+        attibutes: ["id", "name"],
+        where: {
+          role: "pro"
+        },
+        limit: 10,
+      });
+    }
+    if (!!search) {
+      providers = await models.user.findAll({
+        attibutes: ["id", "name"],
+        where: {
+          role: "pro",
+          [Op.or]: {
+            email: { [Op.like]: `%${search}%` },
+            name: { [Op.like]: `%${search}%` },
+          },
+        },
+        limit: 10,
+      });
+    }
+
+    res
+      .status(200)
+      .json(providers.filter((f) => f.dataValues.id !== req.user.dataValues.id));
+  } catch (error) {
+    console.log("create user::Error ", error);
+    res.status(500).json({ error });
+  }
+}
+
+module.exports = { check, get_providers };

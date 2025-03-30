@@ -16,12 +16,16 @@ async function get_patients_to_add_quote(req, res) {
       patients = await models.user.findAll({
         attibutes: ["id", "name"],
         limit: 10,
+        where: {
+          role: "pat",
+        }
       });
     }
     if (!!search) {
       patients = await models.user.findAll({
         attibutes: ["id", "name"],
         where: {
+          role: "pat",
           [Op.or]: {
             email: { [Op.like]: `%${search}%` },
             name: { [Op.like]: `%${search}%` },

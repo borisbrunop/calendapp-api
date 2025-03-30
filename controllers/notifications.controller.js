@@ -1,6 +1,9 @@
+const { Sequelize, Op } = require("sequelize");
 const sequelize = require("../config/sequilizeConnection");
 var initModels = require("../models/init-models");
-const { NOTIFICATIONS } = require("../utils/notifications");
+const { NOTIFICATIONS, NOTIFICATIONS_DATA, changeText } = require("../utils/notifications");
+const paramsValidate = require("../utils/validateParams");
+const { subMonths } = require("date-fns");
 var models = initModels(sequelize);
 
 async function save_token(req, res) {
@@ -94,6 +97,80 @@ async function get_notis(req, res) {
     res.status(500).json({ error });
   }
 }
+async function see_my_notis(req, res) {
+  try {
+
+    await models.notification.update(
+      {
+        state: "seen",
+      },
+      {
+        where: {
+          user_id: req.user.id, 
+          state: "sent",
+        },
+      }
+    );
+
+    res.status(200).json({message: "DONE"});
+
+  } catch (error) {
+    console.log("get notis::Error ", error);
+    res.status(500).json({ error });
+  }
+}
+
+async function get_my_notis(req, res) {
+  try {
+    const validParams = ["tz"];
+    const params = paramsValidate(validParams, req.query);
+  
+    if (!params) {
+      res.status(200).json({ message: "Bad request", error: true });
+      return;
+    }
+
+    const oneMonthAgo = subMonths(new Date(), 1);
+
+    const my_notis = await models.notification.findAll({
+      attributes: [
+        "id",
+        "name",
+        "user_id",
+        "state",
+        [
+            Sequelize.fn('CONVERT_TZ', Sequelize.col('created_at'), '+00:00', params.tz) 
+            ,
+          'created_at'
+        ],
+      ],
+      where: {
+        user_id: req.user.id,
+        created_at: {
+          [Op.gt]: oneMonthAgo,
+        }
+      },
+      include: [{
+        model: models.user,
+        as: "user",
+        attributes: ["id", "name"],
+      }],
+      order: [["created_at", "DESC"]],
+    })
+
+    const response = my_notis.map((n) => ({
+      ...n.dataValues,
+      user: n.dataValues.user.dataValues,
+      ...NOTIFICATIONS_DATA[NOTIFICATIONS[n.dataValues.name]],
+    }))
+
+    res.status(200).json(response);
+
+  } catch (error) {
+    console.log("get notis::Error ", error);
+    res.status(500).json({ error });
+  }
+}
 
 async function change_notis(req, res) {
   try {
@@ -144,4 +221,4 @@ async function change_notis(req, res) {
   }
 }
 
-module.exports = { save_token, get_notis, change_notis };
+module.exports = { save_token, get_notis, change_notis, get_my_notis, see_my_notis };

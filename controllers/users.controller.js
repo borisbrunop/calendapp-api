@@ -67,7 +67,7 @@ async function create(req, res) {
   try {
     //Valid Params
 
-    const validParams = ["email", "pass", "name"];
+    const validParams = ["email", "pass", "name", "role"];
     const params = paramsValidate(validParams, req.body);
 
     if (!params) {
@@ -145,7 +145,7 @@ async function get_users(req, res) {
         attibutes: ["id", "name"],
         include: [includeCategory],
         where:{
-          find_by: role,
+          role,
         },
         limit: 10,
       });
@@ -155,7 +155,7 @@ async function get_users(req, res) {
         attibutes: ["id", "name", "email", "summary"],
         include: [includeCategory],
         where: {
-          find_by: role,
+          role,
           [Op.or]: {
             email: { [Op.like]: `%${search}%` },
             name: { [Op.like]: `%${search}%` },

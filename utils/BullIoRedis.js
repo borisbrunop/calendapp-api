@@ -18,13 +18,18 @@ const notificationQueue = new Queue('notifications', {
 async function runNotificationQueue () {
     // Configure queue processing
     notificationQueue.process(async (job) => {
-        const { pushToken, message, title } = job.data;
+        const { pushToken, message, title, name, user } = job.data;
         const expo = new Expo();
         
         try {
             if (!Expo.isExpoPushToken(pushToken)) {
                 throw new Error(`Invalid push token: ${pushToken}`);
             }
+
+            await models.notification.create({
+                user_id: user,
+                name,
+            })
             
             await expo.sendPushNotificationsAsync([{
                 to: pushToken,
