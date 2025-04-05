@@ -1,9 +1,9 @@
 const { default: Expo } = require("expo-server-sdk");
 const sequelize = require("../config/sequilizeConnection");
 var initModels = require("../models/init-models");
+var models = initModels(sequelize);
 const { subMinutes, addMinutes } = require("date-fns");
 const { notificationQueue } = require("./BullIoRedis");
-var models = initModels(sequelize);
 
 const expo = new Expo();
 

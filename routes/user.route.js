@@ -11,4 +11,8 @@ router
   .route("/")
   .put(validateMiddleware.validateUser, UserController.edit_user);
 
+router
+  .route("/donate")
+  .post(validateMiddleware.validateUser, UserController.check_donation);
+
 module.exports = router;

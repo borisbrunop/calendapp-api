@@ -2,6 +2,7 @@ var DataTypes = require("sequelize").DataTypes;
 var _category = require("./category");
 var _config_noti = require("./config_noti");
 var _device = require("./device");
+var _donation = require("./donation");
 var _noti_type = require("./noti_type");
 var _notification = require("./notification");
 var _provider_patient = require("./provider_patient");
@@ -18,6 +19,7 @@ function initModels(sequelize) {
   var category = _category(sequelize, DataTypes);
   var config_noti = _config_noti(sequelize, DataTypes);
   var device = _device(sequelize, DataTypes);
+  var donation = _donation(sequelize, DataTypes);
   var noti_type = _noti_type(sequelize, DataTypes);
   var notification = _notification(sequelize, DataTypes);
   var provider_patient = _provider_patient(sequelize, DataTypes);
@@ -67,6 +69,7 @@ function initModels(sequelize) {
     category,
     config_noti,
     device,
+    donation,
     noti_type,
     notification,
     provider_patient,

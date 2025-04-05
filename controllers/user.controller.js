@@ -4,6 +4,7 @@ var initModels = require("../models/init-models");
 const paramsValidate = require("../utils/validateParams");
 var models = initModels(sequelize);
 const bcrypt = require("bcrypt");
+const { check_binance_donation } = require("../utils/binanceCall");
 const saltRounds = 10;
 
 async function change_role(req, res) {
@@ -22,6 +23,54 @@ async function change_role(req, res) {
     }
   } catch (error) {
     console.log("create user::Error ", error);
+    res.status(500).json({ error });
+  }
+}
+
+async function check_donation(req, res) {
+  // const { asset, amount, address, memo } = req.body;
+  const validParams = ["asset", "amount", "orderId"];
+  const params = paramsValidate(validParams, req.body);
+  if (!params) {
+    res.status(200).json({ message: "Bad request", error: true });
+    return;
+  }
+
+  try {
+    const check_binance = await check_binance_donation(params)
+
+
+    if(!!check_binance?.error){
+      res.status(400).json(check_binance)
+      return;
+    }
+    const create_donation = {
+      user_id: req.user.id,
+      amount: params.amount,
+      order: params.orderId,
+    }
+
+    
+    if(check_binance){
+      create_donation.status = "ver"
+    }
+
+
+    const check = await models.donation.findOne({
+      where: {
+        order: params.orderId
+      }
+    })
+    if(check){
+      res.status(200).json({error: true, message: "Order already created"});
+      return
+    }
+    
+    const new_donation = await models.donation.create(create_donation)
+
+    res.status(200).json({status: new_donation.status});
+  } catch (error) {
+    console.log("check donation user::Error ", error);
     res.status(500).json({ error });
   }
 }
@@ -103,4 +152,4 @@ async function edit_user(req, res) {
   }
 }
 
-module.exports = { change_role, edit_user };
+module.exports = { change_role, edit_user, check_donation };
