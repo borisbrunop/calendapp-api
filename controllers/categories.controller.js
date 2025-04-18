@@ -1,8 +1,6 @@
 const { Op } = require("sequelize");
 const sequelize = require("../config/sequilizeConnection");
 var initModels = require("../models/init-models");
-const { sendNotification, NOTIFICATIONS } = require("../utils/notifications");
-const { addMinutes } = require("date-fns");
 var models = initModels(sequelize);
 
 async function get_categories(req, res) {

@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('donation', {
+  return sequelize.define('user_tutorial', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
@@ -9,29 +9,23 @@ module.exports = function(sequelize, DataTypes) {
     },
     user_id: {
       type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    order: {
-      type: DataTypes.STRING(200),
-      allowNull: false
-    },
-    status: {
-      type: DataTypes.ENUM('ver','pen'),
       allowNull: false,
-      defaultValue: "pen"
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
-    amount: {
+    tutorial_id: {
       type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    created_at: {
-      type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: Sequelize.Sequelize.literal('CURRENT_TIMESTAMP')
+      references: {
+        model: 'tutorials',
+        key: 'id'
+      }
     }
   }, {
     sequelize,
-    tableName: 'donations',
+    tableName: 'user_tutorials',
     timestamps: false,
     indexes: [
       {
@@ -40,6 +34,20 @@ module.exports = function(sequelize, DataTypes) {
         using: "BTREE",
         fields: [
           { name: "id" },
+        ]
+      },
+      {
+        name: "user_tutorials_users_FK",
+        using: "BTREE",
+        fields: [
+          { name: "user_id" },
+        ]
+      },
+      {
+        name: "user_tutorials_tutorials_FK",
+        using: "BTREE",
+        fields: [
+          { name: "tutorial_id" },
         ]
       },
     ]

@@ -37,6 +37,11 @@ module.exports = function(sequelize, DataTypes) {
     notification_token: {
       type: DataTypes.STRING(100),
       allowNull: true
+    },
+    tutorial_complete: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: 0
     }
   }, {
     sequelize,

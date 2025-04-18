@@ -358,10 +358,12 @@ async function get_quotes_calendar(req, res) {
         {
           model: models.user,
           as: "patient",
+          attributes: ["name", "id", "email", "summary"]
         },
         {
           model: models.user,
           as: "provider",
+          attributes: ["name", "id", "email", "summary"]
         },
       ],
       order: [["from", "ASC"]],
@@ -529,10 +531,12 @@ async function get_quotes(req, res) {
         {
           model: models.user,
           as: "patient",
+          attributes: ["name", "id", "email", "summary"]
         },
         {
           model: models.user,
           as: "provider",
+          attributes: ["name", "id", "email", "summary"]
         },
       ],
       order: [["from", "DESC"]],

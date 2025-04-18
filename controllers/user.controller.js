@@ -27,6 +27,22 @@ async function change_role(req, res) {
   }
 }
 
+async function complete_tutorial(req, res) {
+  try {
+    await models.user.update({
+      tutorial_complete: true
+    }, {
+      where: {
+        id: req.user.id
+      }
+    })
+    res.status(200).json({tutorial_complete: true});
+  } catch (error) {
+    console.log("create user::Error ", error);
+    res.status(500).json({ error });
+  }
+}
+
 async function check_donation(req, res) {
   // const { asset, amount, address, memo } = req.body;
   const validParams = ["asset", "amount", "orderId"];
@@ -152,4 +168,4 @@ async function edit_user(req, res) {
   }
 }
 
-module.exports = { change_role, edit_user, check_donation };
+module.exports = { change_role, edit_user, check_donation, complete_tutorial };
