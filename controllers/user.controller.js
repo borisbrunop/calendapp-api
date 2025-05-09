@@ -1,8 +1,8 @@
 const { QueryTypes } = require("sequelize");
 const sequelize = require("../config/sequilizeConnection");
 var initModels = require("../models/init-models");
-const paramsValidate = require("../utils/validateParams");
 var models = initModels(sequelize);
+const paramsValidate = require("../utils/validateParams");
 const bcrypt = require("bcrypt");
 const { check_binance_donation } = require("../utils/binanceCall");
 const saltRounds = 10;
