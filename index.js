@@ -3,7 +3,7 @@ const dotEnv = require("dotenv").config();
 var bodyParser = require("body-parser");
 const cors = require("cors");
 const morgan = require("morgan");
-const { runNotificationQueue, notificationQueue } = require("./utils/BullIoRedis");
+const { notificationQueue } = require("./utils/BullIoRedis");
 const { BullAdapter } = require('@bull-board/api/bullAdapter');
 const { ExpressAdapter } = require('@bull-board/express');
 const { createBullBoard } = require("@bull-board/api");
@@ -19,7 +19,7 @@ app.use(cors());
 app.use(morgan('dev'));
 
 //RUN BULL IO REDIS PROCESS FOR NOTIFICATIONS
-runNotificationQueue()
+// runNotificationQueue()
 
 const admin_users = {
   [process.env.BULL_USER]: process.env.BULL_PASSWORD
